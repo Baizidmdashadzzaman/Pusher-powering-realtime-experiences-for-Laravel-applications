@@ -1,0 +1,93 @@
+composer create-project laravel/laravel my-app
+
+composer require pusher/pusher-php-server
+
+npm install --save laravel-echo pusher-js
+
+PUSHER_APP_ID=your-app-id
+PUSHER_APP_KEY=your-app-key
+PUSHER_APP_SECRET=your-app-secret
+PUSHER_APP_CLUSTER=your-cluster
+BROADCAST_DRIVER=pusher
+
+php artisan make:event MessageSent
+
+namespace App\Events;
+
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+
+class MessageSent implements ShouldBroadcastNow
+{
+    use InteractsWithSockets, SerializesModels;
+
+    public $message;
+
+    public function __construct($message)
+    {
+        $this->message = $message;
+    }
+
+    public function broadcastOn()
+    {
+        return new Channel('chat');
+    }
+}
+
+<script>
+import { onMounted,watch,ref,onBeforeUnmount } from 'vue';
+//this is for pusher real time notification start//
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
+const sales_notification = ref(true);
+let echoInstance = null;
+window.Pusher = Pusher;
+const initializeEcho = () => {
+  echoInstance = new Echo({
+    broadcaster: 'pusher',
+    key: 'b23d71886d55f985f153',
+    cluster: 'ap2',
+    forceTLS: true,
+  });
+};
+const subscribeToChannel = () => {
+  if (echoInstance) {
+    echoInstance.channel('chat').listen('MessageSent', handleMessage);
+  }
+};
+const unsubscribeFromChannel = () => {
+  if (echoInstance) {
+    echoInstance.leave('chat');
+  }
+};
+const handleMessage = (e) => {
+  const salesLink = `<a href="/admin/sales/view/${e.message}" target="_blank"><b>${e.message}</b></a>`;
+  toast.success(`New sales added successfully. ${salesLink}`, {
+    position: toast.POSITION.BOTTOM_LEFT,
+    autoClose: false,
+    dangerouslyHTMLString: true,
+  });
+};
+watch(sales_notification, (newValue) => {
+  if (newValue) {
+    if (!echoInstance) {
+      initializeEcho();
+    }
+    subscribeToChannel();
+  } else {
+    unsubscribeFromChannel();
+  }
+});
+onBeforeUnmount(() => {
+  unsubscribeFromChannel();
+  if (echoInstance) {
+    echoInstance.disconnect();
+  }
+});
+//this is for pusher real time notification end//
+</script>

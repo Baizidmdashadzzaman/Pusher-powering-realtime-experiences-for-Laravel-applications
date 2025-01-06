@@ -1,20 +1,20 @@
 
-php artisan install:broadcasting   
+php artisan install:broadcasting
 
- composer require pusher/pusher-php-server       
+ composer require pusher/pusher-php-server
 
- php artisan make:migration create_posts_table     
+ php artisan make:migration create_posts_table
 
-php artisan make:model Post           
+php artisan make:model Post
 
-php artisan:make Controller PostController        
-
-
+php artisan:make Controller PostController
 
 
 
 
- 
+
+
+
 
 
 public function up()
@@ -139,10 +139,10 @@ public function store(Request $request)
 
 
 
- 
+
 Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
 
- 
+
 
 
 
